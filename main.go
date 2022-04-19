@@ -33,11 +33,13 @@ var applicationMenuKeyBoard = tgbotapi.NewReplyKeyboard(
 	),
 )
 
-//var createApplicationMenuKeyboard = tgbotapi.NewInlineKeyboardMarkup(
-//	tgbotapi.NewInlineKeyboardRow(
-//		tgbotapi.NewInlineKeyboardButtonData("Имя", "Yerassyl"),
-//		tgbotapi.NewInlineKeyboardButtonData("Фамилия", "Тлеугазы"),
-//	))
+var createApplicationMenuAppTypeKeyboard = tgbotapi.NewInlineKeyboardMarkup(
+	tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("свалка", "свалка"),
+		tgbotapi.NewInlineKeyboardButtonData("крупногабаритные отходы", "крупногабаритные отходы"),
+		tgbotapi.NewInlineKeyboardButtonData("переполненные контейнеры", "переполненные контейнеры"),
+		tgbotapi.NewInlineKeyboardButtonData("переполненные урны", "переполненные урны"),
+	))
 
 type UserApplication struct {
 	Id              string `json:"id"`
@@ -192,6 +194,16 @@ func main() {
 			msg.ReplyMarkup = applicationMenuKeyBoard
 		case "создать заявку":
 			temp := &UserApplication{}
+			msg.Text = "Опишите проишествие"
+			if _, err := bot.Send(msg); err != nil {
+				log.Panic(err)
+			}
+			for u := range updates {
+				if u.Message != nil {
+					temp.Message = u.Message.Text
+					break
+				}
+			}
 			msg.Text = "Напиши ваш номер телефона"
 			if _, err := bot.Send(msg); err != nil {
 				log.Panic(err)
@@ -233,15 +245,26 @@ func main() {
 				}
 			}
 			msg.Text = "Напиши тип заявки"
+			msg.ReplyMarkup = createApplicationMenuAppTypeKeyboard
 			if _, err := bot.Send(msg); err != nil {
 				log.Panic(err)
 			}
 			for u := range updates {
-				if u.Message != nil {
-					temp.ApplicationType = u.Message.Text
+				if u.CallbackQuery != nil {
+					callback := tgbotapi.NewCallback(u.CallbackQuery.ID, u.CallbackQuery.Data)
+					if _, err := bot.Request(callback); err != nil {
+						log.Fatal("callback", err)
+					}
+					newMsg := tgbotapi.NewMessage(u.CallbackQuery.Message.Chat.ID, u.CallbackQuery.Data)
+					if _, err := bot.Send(newMsg); err != nil {
+						log.Fatal("new msg", err)
+					}
+					temp.ApplicationType = newMsg.Text
 					break
 				}
 			}
+			msg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
+			msg.ReplyMarkup = applicationMenuKeyBoard
 			msg.Text = "Напишите адресс проишествия"
 			if _, err := bot.Send(msg); err != nil {
 				log.Panic(err)
