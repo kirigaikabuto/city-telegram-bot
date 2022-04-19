@@ -16,6 +16,7 @@ import (
 
 var (
 	telegramBotApiToken = "5326822961:AAGRO1ZpN4JZg9J2VKY6aIiX-QUufuEovUM"
+	host                = "http://ec2-3-224-35-128.compute-1.amazonaws.com:8080"
 )
 
 var mainMenuKeyBoard = tgbotapi.NewReplyKeyboard(
@@ -92,7 +93,7 @@ func SendApplicationToApi(u *UserApplication) error {
 		return err
 	}
 	//create application
-	urlCreateApp := "http://localhost:8080/application"
+	urlCreateApp := host + "/application"
 	jsonBody, err := json.Marshal(u)
 	if err != nil {
 		return err
@@ -118,7 +119,7 @@ func SendApplicationToApi(u *UserApplication) error {
 	//send photo
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	sendAppUrl := "http://localhost:8080/application/file?id=%s"
+	sendAppUrl := host + "/application/file?id=%s"
 	sendAppUrl = fmt.Sprintf(sendAppUrl, resCreateApp.Id)
 	fw, err := writer.CreateFormFile("file", resGetInfo.Result.FilePath)
 	if err != nil {
